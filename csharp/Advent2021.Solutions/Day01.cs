@@ -13,20 +13,20 @@ namespace Advent2021.Solutions.Day01
               .Select(int.Parse)
               .ToList();
 
-            var part1 = CountIncrements(nums, 1);
-            var part2 = CountIncrements(nums, 3);
+            var part1 = CountIncreases(nums, 1);
+            var part2 = CountIncreases(nums, 3);
 
             return new Result(part1, part2);
         }
 
-        public static int CountIncrements(List<int> nums, int step)
+        public static int CountIncreases(List<int> nums, int window)
         {
-            var numIncrements = 0;
-            for (int i = step; i < nums.Count; i++)
+            var numIncreases = 0;
+            for (int i = window; i < nums.Count; i++)
             {
-                if (nums[i] > nums[i - step]) numIncrements += 1;
+                if (nums[i] > nums[i - window]) numIncreases += 1;
             }
-            return numIncrements;
+            return numIncreases;
         }
     }
 }

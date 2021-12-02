@@ -32,8 +32,8 @@ namespace Advent2021.Tests
         {
             var input = File.ReadLines("inputs/day01.txt");
             var result = Day01.Solve(input);
-            Assert.Equal(1581, result.Part1);
-            Assert.Equal(1618, result.Part2);
+            Assert.Equal(1288, result.Part1);
+            Assert.Equal(1311, result.Part2);
         }
     }
 }

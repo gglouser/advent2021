@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Advent2021.Solutions
 {
@@ -36,15 +38,42 @@ namespace Advent2021.Solutions
         public int Width() => Elems[0].Length;
         public int Height() => Elems.Length;
 
-        public T Get(int x, int y) => Elems[y][x];
-        public T Get(Pos pos) => Elems[pos.Y][pos.X];
+        public bool InBounds(Pos pos) =>
+            pos.X >= 0 && pos.X < Width() && pos.Y >= 0 && pos.Y < Height();
 
-        public IEnumerable<Pos> adjacent(Pos pos)
+        public T this[Pos pos]
         {
-            if (pos.X > 0) yield return new Pos(pos.X - 1, pos.Y);
-            if (pos.X < Width() - 1) yield return new Pos(pos.X + 1, pos.Y);
-            if (pos.Y > 0) yield return new Pos(pos.X, pos.Y - 1);
-            if (pos.Y < Height() - 1) yield return new Pos(pos.X, pos.Y + 1);
+            get => Elems[pos.Y][pos.X];
+            set => Elems[pos.Y][pos.X] = value;
         }
+
+        public Grid<S> Map<S>(Func<T, S> func) =>
+            new Grid<S>(Elems.Select(row => row.Select(func).ToArray()).ToArray());
+
+        public IEnumerable<Pos> Positions()
+        {
+            for (var x = 0; x < Width(); x++)
+            {
+                for (var y = 0; y < Height(); y++)
+                {
+                    yield return new Pos(x, y);
+                }
+            }
+        }
+
+        public IEnumerable<T> Values() => Elems.SelectMany(row => row);
+
+        private static Pos[] AdjacentOffsets = {
+            new Pos(1, 0), new Pos(0, 1), new Pos(-1, 0), new Pos(0, -1) };
+
+        private static Pos[] NeighborOffsets = {
+            new Pos(1, 0), new Pos(1, 1), new Pos(0, 1), new Pos(-1, 1),
+            new Pos(-1, 0), new Pos(-1, -1), new Pos(0, -1), new Pos(1, -1) };
+
+        public IEnumerable<Pos> Adjacent(Pos pos) =>
+            AdjacentOffsets.Select(o => pos + o).Where(InBounds);
+
+        public IEnumerable<Pos> Neighbors(Pos pos) =>
+            NeighborOffsets.Select(o => pos + o).Where(InBounds);
     }
 }

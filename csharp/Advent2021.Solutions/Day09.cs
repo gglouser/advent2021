@@ -15,31 +15,25 @@ namespace Advent2021.Solutions.Day09
             var heightMap = new Grid<int>(heights);
 
             var lowPoints = FindLowPoints(heightMap);
-            var part1 = lowPoints.Select(p => heightMap.Get(p)).Sum() + lowPoints.Count;
+            var part1 = lowPoints.Select(p => heightMap[p]).Sum() + lowPoints.Count;
 
-            var basins = lowPoints.Select(p => FloodFill(heightMap, p)).ToList();
-            basins.Sort();
-            var part2 = basins.TakeLast(3).Aggregate(1, (a, b) => a * b);
+            var part2 = lowPoints
+                .Select(p => FloodFill(heightMap, p))
+                .OrderBy(basinSize => basinSize)
+                .TakeLast(3)
+                .Aggregate(1, (a, b) => a * b);
 
             return new Result(part1, part2);
         }
 
         public static List<Pos> FindLowPoints(Grid<int> heightMap)
         {
-            List<Pos> lowPoints = new List<Pos>();
-            for (int i = 0; i < heightMap.Width(); i++)
+            return heightMap.Positions().Where(pos =>
             {
-                for (int j = 0; j < heightMap.Height(); j++)
-                {
-                    var pos = new Pos(i, j);
-                    var h = heightMap.Get(pos);
-                    if (heightMap.adjacent(pos).All(a => h < heightMap.Get(a)))
-                    {
-                        lowPoints.Add(pos);
-                    }
-                }
-            }
-            return lowPoints;
+                var h = heightMap[pos];
+                return heightMap.Adjacent(pos).All(a => h < heightMap[a]);
+            })
+            .ToList();
         }
 
         public static int FloodFill(Grid<int> heightMap, Pos startPos)
@@ -54,10 +48,10 @@ namespace Advent2021.Solutions.Day09
                 var pos = queue.Dequeue();
                 if (seen.Contains(pos)) continue;
                 seen.Add(pos);
-                if (heightMap.Get(pos) < 9)
+                if (heightMap[pos] < 9)
                 {
                     basin.Add(pos);
-                    foreach (var adj in heightMap.adjacent(pos))
+                    foreach (var adj in heightMap.Adjacent(pos))
                     {
                         queue.Enqueue(adj);
                     }

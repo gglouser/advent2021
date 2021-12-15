@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -75,5 +76,43 @@ namespace Advent2021.Solutions
 
         public IEnumerable<Pos> Neighbors(Pos pos) =>
             NeighborOffsets.Select(o => pos + o).Where(InBounds);
+    }
+
+    public class Counter<T> : IEnumerable<(T, long)>
+    {
+        private Dictionary<T, long> Counts = new Dictionary<T, long>();
+
+        public long this[T item]
+        {
+            get => Counts.ContainsKey(item) ? Counts[item] : 0;
+            set => SetCount(item, value);
+        }
+
+        public IEnumerator<(T, long)> GetEnumerator()
+        {
+            foreach (var item in Counts)
+            {
+                yield return (item.Key, item.Value);
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private void SetCount(T item, long value)
+        {
+            if (Counts.ContainsKey(item))
+                Counts[item] = value;
+            else
+                Counts.Add(item, value);
+        }
+    }
+
+    public static class Extensions
+    {
+        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(
+            this IEnumerable<(TKey, TValue)> list)
+        {
+            return list.ToDictionary(x => x.Item1, x => x.Item2);
+        }
     }
 }

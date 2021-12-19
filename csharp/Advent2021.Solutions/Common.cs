@@ -27,6 +27,37 @@ namespace Advent2021.Solutions
         }
     }
 
+    public struct Pos3
+    {
+        public int X;
+        public int Y;
+        public int Z;
+
+        public Pos3(int x, int y, int z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
+        public override string ToString()
+        {
+            return $"({X}, {Y}, {Z})";
+        }
+
+        public int Abs() => Math.Abs(X) + Math.Abs(Y) + Math.Abs(Z);
+
+        public static Pos3 operator +(Pos3 a, Pos3 b)
+        {
+            return new Pos3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        }
+
+        public static Pos3 operator -(Pos3 a, Pos3 b)
+        {
+            return new Pos3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
+    }
+
     public class Grid<T>
     {
         public T[][] Elems;

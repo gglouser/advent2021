@@ -30,30 +30,39 @@ namespace Advent2021.Solutions.Day18
         }
     }
 
-    public abstract class SFNum
+    public class SFNum
     {
-        public abstract SFLiteral LeftMost();
-        public abstract SFLiteral RightMost();
-        public abstract SFNum Clone();
-        public abstract bool TryExplode(int depth);
-        public abstract bool TrySplit();
-        public abstract int Magnitude();
+        public int Value;
+        public SFNum Left;
+        public SFNum Right;
+
+        public SFNum(int value)
+        {
+            Value = value;
+        }
+
+        public SFNum(SFNum left, SFNum right)
+        {
+            Value = -1;
+            Left = left;
+            Right = right;
+            left.RightMost().LinkRight(right.LeftMost());
+        }
 
         public static SFNum Parse(string s)
         {
-            Stack<SFNum> stack = new Stack<SFNum>();
+            var stack = new Stack<SFNum>();
             foreach (var c in s)
             {
                 if (char.IsDigit(c))
                 {
-                    stack.Push(new SFLiteral(c - '0'));
+                    stack.Push(new SFNum(c - '0'));
                 }
                 else if (c == ']')
                 {
                     var right = stack.Pop();
                     var left = stack.Pop();
-                    var num = new SFPair(left, right);
-                    stack.Push(num);
+                    stack.Push(new SFNum(left, right));
                 }
             }
             var result = stack.Pop();
@@ -61,160 +70,82 @@ namespace Advent2021.Solutions.Day18
             return result;
         }
 
-        public static SFPair operator +(SFNum a, SFNum b)
+        public static SFNum operator +(SFNum a, SFNum b)
         {
-            var n = new SFPair(a.Clone(), b.Clone());
+            var n = new SFNum(a.Clone(), b.Clone());
             n.Reduce();
             return n;
         }
-    }
-
-    public class SFPair : SFNum
-    {
-        public SFNum Left;
-        public SFNum Right;
-
-        public SFPair(SFNum left, SFNum right)
-        {
-            Left = left;
-            Right = right;
-            left.RightMost().LinkRight(right.LeftMost());
-        }
 
         public override string ToString()
-        {
-            return "[" + Left.ToString() + "," + Right.ToString() + "]";
-        }
+            => Value >= 0 ? Value.ToString() : $"[{Left.ToString()},{Right.ToString()}]";
 
-        public override SFLiteral LeftMost() => Left.LeftMost();
+        public SFNum Clone()
+            => Value >= 0 ? new SFNum(Value) : new SFNum(Left.Clone(), Right.Clone());
 
-        public override SFLiteral RightMost() => Right.RightMost();
+        public SFNum LeftMost() => Value >= 0 ? this : Left.LeftMost();
 
-        public override SFNum Clone() => new SFPair(Left.Clone(), Right.Clone());
+        public SFNum RightMost() => Value >= 0 ? this : Right.RightMost();
 
-        public override bool TryExplode(int depth)
-        {
-            if (depth < 4)
-            {
-                return (Left.TryExplode(depth + 1))
-                    || (Right.TryExplode(depth + 1));
-            }
-            else
-            {
-                if (Left is SFPair)
-                {
-                    Left = ((SFPair)Left).ExplodePatch();
-                    return true;
-                }
-                else if (Right is SFPair)
-                {
-                    Right = ((SFPair)Right).ExplodePatch();
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public SFLiteral ExplodePatch()
-        {
-            var leftOrd = (SFLiteral)Left;
-            var leftleft = leftOrd.Left;
-            if (leftleft != null) leftleft.Value += leftOrd.Value;
-            var rightOrd = (SFLiteral)Right;
-            var rightright = rightOrd.Right;
-            if (rightright != null) rightright.Value += rightOrd.Value;
-            var zero = new SFLiteral(0);
-            zero.LinkLeft(leftleft);
-            zero.LinkRight(rightright);
-            return zero;
-        }
-
-        public override bool TrySplit()
-        {
-            if (Left is SFLiteral)
-            {
-                var n = (SFLiteral)Left;
-                if (n.Value > 9)
-                {
-                    Left = n.Split();
-                    return true;
-                }
-            }
-            else if (((SFPair)Left).TrySplit())
-            {
-                return true;
-            }
-
-            if (Right is SFLiteral)
-            {
-                var n = (SFLiteral)Right;
-                if (n.Value > 9)
-                {
-                    Right = n.Split();
-                    return true;
-                }
-            }
-            else
-            {
-                return (((SFPair)Right).TrySplit());
-            }
-
-            return false;
-        }
-
-        public override int Magnitude() => 3 * Left.Magnitude() + 2 * Right.Magnitude();
-
-        public void Reduce()
-        {
-            while (TryExplode(1) || TrySplit()) { }
-        }
-    }
-
-    public class SFLiteral : SFNum
-    {
-        public int Value;
-        public SFLiteral Left;
-        public SFLiteral Right;
-
-        public SFLiteral(int value)
-        {
-            Value = value;
-        }
-
-        public override SFLiteral LeftMost() => this;
-        public override SFLiteral RightMost() => this;
-        public override SFNum Clone() => new SFLiteral(Value);
-
-        public override bool TryExplode(int depth) => false;
-
-        public override bool TrySplit() => false;
-
-        public override int Magnitude() => Value;
-
-        public override string ToString()
-        {
-            return Value.ToString();
-        }
-
-        public void LinkLeft(SFLiteral left)
+        public void LinkLeft(SFNum left)
         {
             Left = left;
             if (left != null) left.Right = this;
         }
 
-        public void LinkRight(SFLiteral right)
+        public void LinkRight(SFNum right)
         {
             Right = right;
             if (right != null) right.Left = this;
         }
 
-        public SFPair Split()
+        public bool TryExplode(int depth)
         {
-            var l = new SFLiteral(Value / 2);
-            var r = new SFLiteral(Value - l.Value);
-            l.LinkLeft(Left);
-            r.LinkRight(Right);
-            return new SFPair(l, r);
+            if (Value >= 0) return false;
+
+            if (depth < 4)
+                return Left.TryExplode(depth + 1) || Right.TryExplode(depth + 1);
+
+            // Explode!
+            var leftleft = Left.Left;
+            if (leftleft != null) leftleft.Value += Left.Value;
+
+            var rightright = Right.Right;
+            if (rightright != null) rightright.Value += Right.Value;
+
+            Value = 0;
+            LinkLeft(leftleft);
+            LinkRight(rightright);
+            return true;
         }
+
+        public bool TrySplit()
+        {
+            if (Value < 0)
+                return Left.TrySplit() || Right.TrySplit();
+
+            if (Value <= 9) return false;
+
+            // Split!
+            var l = new SFNum(Value / 2);
+            l.LinkLeft(Left);
+            Left = l;
+
+            var r = new SFNum(Value - l.Value);
+            r.LinkRight(Right);
+            Right = r;
+
+            Value = -1;
+            Left.LinkRight(Right);
+            return true;
+        }
+
+        public void Reduce()
+        {
+            while (TryExplode(0) || TrySplit()) { }
+        }
+
+        public int Magnitude()
+            => Value >= 0 ? Value : 3 * Left.Magnitude() + 2 * Right.Magnitude();
     }
 }

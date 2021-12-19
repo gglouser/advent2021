@@ -10,25 +10,25 @@ namespace Advent2021.Tests
         [Fact]
         public void TestExplode()
         {
-            var n = SFPair.Parse("[[[[[9,8],1],2],3],4]");
+            var n = SFNum.Parse("[[[[[9,8],1],2],3],4]");
             Assert.Equal("[[[[[9,8],1],2],3],4]", n.ToString());
-            Assert.True(n.TryExplode(1));
+            Assert.True(n.TryExplode(0));
             Assert.Equal("[[[[0,9],2],3],4]", n.ToString());
         }
 
         [Fact]
         public void TestSplit()
         {
-            var n = new SFLiteral(11);
-            var x = n.Split();
-            Assert.Equal("[5,6]", x.ToString());
+            var n = new SFNum(11);
+            Assert.True(n.TrySplit());
+            Assert.Equal("[5,6]", n.ToString());
         }
 
         [Fact]
         public void TestReduce()
         {
-            var p = SFPair.Parse("[[[[4,3],4],4],[7,[[8,4],9]]]");
-            var q = SFPair.Parse("[1,1]");
+            var p = SFNum.Parse("[[[[4,3],4],4],[7,[[8,4],9]]]");
+            var q = SFNum.Parse("[1,1]");
             var r = p + q;
             Assert.Equal("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", r.ToString());
         }
@@ -44,7 +44,7 @@ namespace Advent2021.Tests
 [5,5]
 ";
             var input = example.Trim().ReadLines();
-            var sum = input.Select(SFPair.Parse).Aggregate((a, b) => a + b);
+            var sum = input.Select(SFNum.Parse).Aggregate((a, b) => a + b);
             Assert.Equal("[[[[3,0],[5,3]],[4,4]],[5,5]]", sum.ToString());
         }
 

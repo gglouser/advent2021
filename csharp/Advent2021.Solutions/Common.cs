@@ -67,6 +67,20 @@ namespace Advent2021.Solutions
             Elems = elems;
         }
 
+        public static Grid<T> FromGenerator(int width, int height, Func<Pos, T> fun)
+        {
+            var elems = new T[height][];
+            for (int row = 0; row < height; row++)
+            {
+                elems[row] = new T[width];
+                for (int col = 0; col < width; col++)
+                {
+                    elems[row][col] = fun(new Pos(col, row));
+                }
+            }
+            return new Grid<T>(elems);
+        }
+
         public int Width() => Elems[0].Length;
         public int Height() => Elems.Length;
 

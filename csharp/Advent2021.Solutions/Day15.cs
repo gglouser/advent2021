@@ -51,59 +51,6 @@ namespace Advent2021.Solutions.Day15
             }
         }
 
-        public class PriorityQueue<T>
-        {
-            private List<(int, T)> Elems = new List<(int, T)>();
-            public void Enqueue(int priority, T item)
-            {
-                Elems.Add((priority, item));
-                UpHeap(Elems.Count - 1);
-            }
-            public T Dequeue()
-            {
-                Swap(0, Elems.Count - 1);
-                var x = Elems.Last();
-                Elems.RemoveAt(Elems.Count - 1);
-                DownHeap(0);
-                return x.Item2;
-            }
-            public bool Any()
-            {
-                return Elems.Any();
-            }
-            private void Swap(int a, int b)
-            {
-                var tmp = Elems[a];
-                Elems[a] = Elems[b];
-                Elems[b] = tmp;
-            }
-            private void UpHeap(int pos)
-            {
-                if (pos == 0) return;
-                int parent = (pos - 1) / 2;
-                if (Elems[pos].Item1 < Elems[parent].Item1)
-                {
-                    Swap(pos, parent);
-                    UpHeap(parent);
-                }
-            }
-            private void DownHeap(int pos)
-            {
-                var left = 2 * pos + 1;
-                var right = 2 * pos + 2;
-                var smallest = pos;
-                if (left < Elems.Count && Elems[left].Item1 < Elems[smallest].Item1)
-                    smallest = left;
-                if (right < Elems.Count && Elems[right].Item1 < Elems[smallest].Item1)
-                    smallest = right;
-                if (smallest != pos)
-                {
-                    Swap(pos, smallest);
-                    DownHeap(smallest);
-                }
-            }
-        }
-
         public static int LowestRisk(Grid<int> cave)
         {
             var queue = new PriorityQueue<State>();

@@ -15,7 +15,7 @@ namespace Advent2021.Tests
             var input = example.Trim().ReadLines();
             var result = DayXX.Solve(input);
             Assert.Equal(-1, result.Part1);
-            Assert.Equal(-1, result.Part2);
+            // Assert.Equal(-1, result.Part2);
         }
 
         [Fact]
@@ -24,7 +24,7 @@ namespace Advent2021.Tests
             var input = File.ReadLines("inputs/dayXX.txt");
             var result = DayXX.Solve(input);
             Assert.Equal(-1, result.Part1);
-            Assert.Equal(-1, result.Part2);
+            // Assert.Equal(-1, result.Part2);
         }
     }
 }

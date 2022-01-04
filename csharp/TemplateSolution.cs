@@ -9,9 +9,7 @@ namespace Advent2021.Solutions.DayXX
     {
         public static Result Solve(IEnumerable<string> input)
         {
-            List<int> nums = input
-              .Select(int.Parse)
-              .ToList();
+            List<int> nums = input.Select(int.Parse).ToList();
 
             var part1 = 0;
             var part2 = 0;

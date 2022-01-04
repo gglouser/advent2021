@@ -19,7 +19,7 @@ namespace Advent2021.Solutions.Day22
                 Y = new Range { Min = -50, Max = 50 },
                 Z = new Range { Min = -50, Max = 50 },
             };
-            var nearCuboids = cuboids.Where(c => c.IsWithin(initRegion)).ToArray();
+            var nearCuboids = cuboids.Where(c => initRegion.Contains(c)).ToArray();
 
             var part1 = BootReactor(nearCuboids);
             var part2 = BootReactor(cuboids);
@@ -30,29 +30,27 @@ namespace Advent2021.Solutions.Day22
         public static long BootReactor(Cuboid[] cuboids)
         {
             var slices1 = GetSliceRanges(cuboids.Select(c => c.X))
-                .Select(range => SliceX(cuboids, range))
+                .Select(range => Slice(cuboids, range, c => c.X, Cuboid.UpdateX))
                 .Where(slice => slice.Any())
                 .ToArray();
 
-            var slices2 = slices1.Select(xslice =>
-                GetSliceRanges(xslice.Select(c => c.Y))
-                    .Select(range => SliceY(xslice, range))
+            var slices2 = slices1.SelectMany(slice =>
+                GetSliceRanges(slice.Select(c => c.Y))
+                    .Select(range => Slice(slice, range, c => c.Y, Cuboid.UpdateY))
                     .Where(slice => slice.Any())
                     .ToArray()).ToArray();
 
-            var slices3 = slices2.Select(xslice => xslice.Select(yslice =>
-                GetSliceRanges(yslice.Select(c => c.Z))
-                    .Select(range => SliceZ(yslice, range))
+            var slices3 = slices2.SelectMany(slice =>
+                GetSliceRanges(slice.Select(c => c.Z))
+                    .Select(range => Slice(slice, range, c => c.Z, Cuboid.UpdateZ))
                     .Where(slice => slice.Any())
-                    .ToArray()).ToArray()).ToArray();
+                    .ToArray()).ToArray();
 
-            var cubes = slices3.Select(zslice =>
-                zslice.Select(yslice =>
-                    yslice.Select(xslice =>
-                        xslice.Last().On ? xslice[0].Volume : 0
-                    ).Sum()
-                ).Sum()
-            ).Sum();
+            var cubes = slices3
+                .Select(slice => slice.Last())
+                .Where(cuboid => cuboid.On)
+                .Select(cuboid => cuboid.Volume)
+                .Sum();
             return cubes;
         }
 
@@ -72,44 +70,18 @@ namespace Advent2021.Solutions.Day22
             return slices;
         }
 
-        public static Cuboid[] SliceX(IEnumerable<Cuboid> cuboids, Range slice)
+        public static Cuboid[] Slice(
+            IEnumerable<Cuboid> cuboids,
+            Range range,
+            Func<Cuboid, Range> select,
+            Cuboid.Updater update)
         {
             return cuboids
-                .Where(c => slice.Min <= c.X.Max && c.X.Min <= slice.Max)
-                .Select(c => new Cuboid
+                .Where(c => range.Intersects(select(c)))
+                .Select(c =>
                 {
-                    X = new Range { Min = slice.Min, Max = slice.Max },
-                    Y = c.Y,
-                    Z = c.Z,
-                    On = c.On,
-                })
-                .ToArray();
-        }
-
-        public static Cuboid[] SliceY(IEnumerable<Cuboid> cuboids, Range slice)
-        {
-            return cuboids
-                .Where(c => slice.Min <= c.Y.Max && c.Y.Min <= slice.Max)
-                .Select(c => new Cuboid
-                {
-                    X = c.X,
-                    Y = new Range { Min = slice.Min, Max = slice.Max },
-                    Z = c.Z,
-                    On = c.On,
-                })
-                .ToArray();
-        }
-
-        public static Cuboid[] SliceZ(IEnumerable<Cuboid> cuboids, Range slice)
-        {
-            return cuboids
-                .Where(c => slice.Min <= c.Z.Max && c.Z.Min <= slice.Max)
-                .Select(c => new Cuboid
-                {
-                    X = c.X,
-                    Y = c.Y,
-                    Z = new Range { Min = slice.Min, Max = slice.Max },
-                    On = c.On,
+                    update(ref c, range);
+                    return c;
                 })
                 .ToArray();
         }
@@ -119,6 +91,9 @@ namespace Advent2021.Solutions.Day22
     {
         public int Min;
         public int Max;
+
+        public bool Intersects(Range other) => Min <= other.Max && other.Min <= Max;
+        public bool Contains(Range other) => Min <= other.Min && Max >= other.Max;
     }
 
     public struct Cuboid
@@ -159,9 +134,13 @@ namespace Advent2021.Solutions.Day22
             get => (long)(X.Max - X.Min + 1) * (long)(Y.Max - Y.Min + 1) * (long)(Z.Max - Z.Min + 1);
         }
 
-        public bool IsWithin(Cuboid region) =>
-            X.Min >= region.X.Min && X.Max <= region.X.Max
-            && Y.Min >= region.Y.Min && Y.Max <= region.Y.Max
-            && Z.Min >= region.Z.Min && Z.Max <= region.Z.Max;
+        public bool Contains(Cuboid other) =>
+            X.Contains(other.X) && Y.Contains(other.Y) && Z.Contains(other.Z);
+
+        public delegate void Updater(ref Cuboid c, Range r);
+
+        public static void UpdateX(ref Cuboid c, Range r) => c.X = r;
+        public static void UpdateY(ref Cuboid c, Range r) => c.Y = r;
+        public static void UpdateZ(ref Cuboid c, Range r) => c.Z = r;
     }
 }

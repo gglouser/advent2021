@@ -79,48 +79,34 @@ namespace Advent2021.Solutions.Day19
             return scanners;
         }
 
-        public static Pos3 ChangeOrientation(Pos3 beacon, int which)
+        private static readonly Func<Pos3, Pos3>[] Rotations;
+
+        static Day19()
         {
-            var x = beacon.X;
-            var y = beacon.Y;
-            var z = beacon.Z;
-            switch (which)
-            {
-                case 0: return new Pos3(x, y, z);
-                case 1: return new Pos3(x, z, -y);
-                case 2: return new Pos3(x, -y, -z);
-                case 3: return new Pos3(x, -z, y);
-                case 4: return new Pos3(-x, -z, -y);
-                case 5: return new Pos3(-x, -y, z);
-                case 6: return new Pos3(-x, z, y);
-                case 7: return new Pos3(-x, y, -z);
-                case 8: return new Pos3(y, z, x);
-                case 9: return new Pos3(y, x, -z);
-                case 10: return new Pos3(y, -z, -x);
-                case 11: return new Pos3(y, -x, z);
-                case 12: return new Pos3(-y, -x, -z);
-                case 13: return new Pos3(-y, -z, x);
-                case 14: return new Pos3(-y, x, z);
-                case 15: return new Pos3(-y, z, -x);
-                case 16: return new Pos3(z, x, y);
-                case 17: return new Pos3(z, y, -x);
-                case 18: return new Pos3(z, -x, -y);
-                case 19: return new Pos3(z, -y, x);
-                case 20: return new Pos3(-z, -y, -x);
-                case 21: return new Pos3(-z, -x, y);
-                case 22: return new Pos3(-z, y, x);
-                case 23: return new Pos3(-z, x, -y);
-                default: throw new Exception("illegal orientation");
-            }
+            var refl1 = new Func<Pos3, Pos3>[] {
+                p => p.ReflectY(),
+                p => p.ReflectZ(),
+                p => p.ReflectYZ(),
+                p => p.ReflectYZNeg(),
+            };
+            var refl2 = new Func<Pos3, Pos3>[] {
+                p => p.ReflectY(),
+                p => p.ReflectX(),
+                p => p.ReflectXY(),
+                p => p.ReflectXYNeg(),
+                p => p.ReflectXZ(),
+                p => p.ReflectXZNeg(),
+            };
+            Rotations = refl1.SelectMany(r1 => refl2.Select(r2 => r1.Compose(r2))).ToArray();
         }
 
         public static (List<Pos3>, Pos3) MatchBeacons(List<Pos3> beacons1, List<Pos3> beacons2)
         {
             for (int i = 0; i < beacons1.Count; i++)
             {
-                for (int orientation = 0; orientation < 24; orientation++)
+                foreach (var rot in Rotations)
                 {
-                    var b2 = beacons2.Select(pos => ChangeOrientation(pos, orientation)).ToList();
+                    var b2 = beacons2.Select(rot).ToList();
                     for (int j = 0; j < beacons2.Count; j++)
                     {
                         var delta = beacons1[i] - b2[j];
@@ -128,7 +114,7 @@ namespace Advent2021.Solutions.Day19
                         var common = beacons1.Intersect(rb2).Count();
                         if (common >= 12)
                         {
-                            Console.WriteLine($"match at orientation {orientation}");
+                            Console.WriteLine($"match at orientation {rot(new Pos3(1, 2, 3))}");
                             Console.WriteLine($"delta relative to scanner0 is {delta}");
                             return (rb2, delta);
                         }

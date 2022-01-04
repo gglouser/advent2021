@@ -56,6 +56,16 @@ namespace Advent2021.Solutions
         {
             return new Pos3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         }
+
+        public Pos3 ReflectX() => new(-X, Y, Z);
+        public Pos3 ReflectY() => new(X, -Y, Z);
+        public Pos3 ReflectZ() => new(X, Y, -Z);
+        public Pos3 ReflectXY() => new(Y, X, Z);
+        public Pos3 ReflectXYNeg() => new(-Y, -X, Z);
+        public Pos3 ReflectXZ() => new(Z, Y, X);
+        public Pos3 ReflectXZNeg() => new(-Z, Y, -X);
+        public Pos3 ReflectYZ() => new(X, Z, Y);
+        public Pos3 ReflectYZNeg() => new(X, -Z, -Y);
     }
 
     public class Grid<T>
@@ -213,10 +223,10 @@ namespace Advent2021.Solutions
 
     public static class Extensions
     {
-        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(
-            this IEnumerable<(TKey, TValue)> list)
-        {
-            return list.ToDictionary(x => x.Item1, x => x.Item2);
-        }
+        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey, TValue)> list) =>
+            list.ToDictionary(x => x.Item1, x => x.Item2);
+
+        public static Func<A, C> Compose<A, B, C>(this Func<A, B> f, Func<B, C> g) =>
+            x => g(f(x));
     }
 }

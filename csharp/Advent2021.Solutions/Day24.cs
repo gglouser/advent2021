@@ -12,95 +12,13 @@ namespace Advent2021.Solutions.Day24
         public static Result Solve(IEnumerable<string> input)
         {
             var program = input.ToArray();
+
             var param = ExtractParams(program);
-            /*
-                w = inp()
-                x = z % 26 + S
-                z /= ZScale
-                if (x != w) {
-                    z = z * 26 + w + T
-                }
+            var (model1, model2) = FindModelNums(param);
 
-                z = 0
-            (1, 11, 7)
-                x = 11 -- no valid w
-                z = a0 + 7
-
-                z = a0 + 7
-            (1, 14, 8)
-                x = a0 + 7 + 14  -- no valid w
-                z = 26*(a0 + 7) + a1 + 8
-
-                z = (a0 + 7, a1 + 8)
-            (1, 10, 16)
-                x = a1 + 8 + 10  -- no valid w
-                z = 26*(a0 + 7, a1 + 8) + a2 + 16
-                
-                z = (a0 + 7, a1 + 8, a2 + 16)
-            (1, 14, 8)
-                x = a2 + 16 + 14 -- no valid w
-                z = 26*(a0 + 7, a1 + 8, a2 + 16) + a3 + 8
-
-                z = (a0 + 7, a1 + 8, a2 + 16, a3 + 8)
-            (26, -8, 3)
-                z = (a0 + 7, a1 + 8, a2 + 16)
-                x = a3 + 8 - 8 = a3
-                -- a4 == a3
-
-                z = (a0 + 7, a1 + 8, a2 + 16)
-            (1, 14, 12)
-                x = a2 + 16 + 14 -- no valid w
-                z = 26*(a0 + 7, a1 + 8, a2 + 16) + a5 + 12
-
-                z = (a0 + 7, a1 + 8, a2 + 16, a5 + 12)
-            (26, -11, 1)
-                z = (a0 + 7, a1 + 8, a2 + 16)
-                x = a5 + 12 - 11 = a5 + 1
-                -- a6 == a5 + 1
-
-                z = (a0 + 7, a1 + 8, a2 + 16)
-            (1, 10, 8)
-                x = a2 + 16 + 10 -- no valid w
-                z = (a0 + 7, a1 + 8, a2 + 16, a7 + 8)
-                
-                z = (a0 + 7, a1 + 8, a2 + 16, a7 + 8)
-            (26, -6, 8)
-                z = (a0 + 7, a1 + 8, a2 + 16)
-                x = a7 + 8 - 6 = a7 + 2
-                -- a8 == a7 + 2
-
-                z = (a0 + 7, a1 + 8, a2 + 16)
-            (26, -9, 14)
-                z = (a0 + 7, a1 + 8)
-                x = a2 + 16 - 9 = a2 + 7
-                -- a9 == a2 + 7
-
-                z = (a0 + 7, a1 + 8)
-            (1, 12, 4)
-                z = (a0 + 7, a1 + 8, a10 + 4)
-            (26, -5, 14)
-                -- a11 = a10 - 1
-                z = (a0 + 7, a1 + 8)
-            (26, -4, 15)
-                -- a12 = a1 + 4
-                z = (a0 + 7)
-                (26, -9, 6)
-                -- a13 = a0 - 2
-
-            -- a4 == a3
-            -- a6 == a5 + 1
-            -- a8 == a7 + 2
-            -- a9 == a2 + 7
-            -- a11 = a10 - 1
-            -- a12 = a1 + 4
-            -- a13 = a0 - 2
-            */
-
-            var model1 = new int[] {9,5,2,9,9,8,9,7,9,9,9,8,9,7};
             var alu1 = RunProgram(program, model1);
             Debug.Assert(alu1.Z == 0);
 
-            var model2 = new int[] {3,1,1,1,1,1,2,1,3,8,2,1,5,1};
             var alu2 = RunProgram(program, model2);
             Debug.Assert(alu2.Z == 0);
 
@@ -183,6 +101,42 @@ namespace Advent2021.Solutions.Day24
             }
 
             return param;
+        }
+
+        private static (int[], int[]) FindModelNums(List<(int, int, int)> prog)
+        {
+            var maxModel = new int[14];
+            var minModel = new int[14];
+            var stack = new Stack<(int, int)>();
+            for (int i = 0; i < prog.Count; i++)
+            {
+                if (prog[i].Item1 == 1)
+                {
+                    stack.Push((i, prog[i].Item3));
+                }
+                else
+                {
+                    var (j, x) = stack.Pop();
+                    var diff = prog[i].Item2 + x;
+                    // model[i] = model[j] + diff;
+                    if (diff >= 0)
+                    {
+                        maxModel[i] = 9;
+                        maxModel[j] = 9 - diff;
+                        minModel[i] = 1 + diff;
+                        minModel[j] = 1;
+                    }
+                    else
+                    {
+                        maxModel[i] = 9 + diff;
+                        maxModel[j] = 9;
+                        minModel[i] = 1;
+                        minModel[j] = 1 - diff;
+                    }
+                }
+            }
+            Debug.Assert(!stack.Any());
+            return (maxModel, minModel);
         }
     }
 

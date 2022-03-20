@@ -21,13 +21,13 @@ namespace Advent2021.Solutions.Day13
                 .Select(ParseFold)
                 .ToList();
 
-            var nextDots = FoldAlong(dots, folds[0].Item1, folds[0].Item2);
+            var nextDots = FoldPage(folds[0].Item1, folds[0].Item2, dots);
             var part1 = nextDots.Count;
 
             var page = dots;
             foreach (var (axis, where) in folds)
             {
-                page = FoldAlong(page, axis, where);
+                page = FoldPage(axis, where, page);
             }
             var part2 = Render(page);
 
@@ -46,28 +46,30 @@ namespace Advent2021.Solutions.Day13
             return (match.Groups[1].Value, int.Parse(match.Groups[2].Value));
         }
 
-        public static List<Pos> FoldAlong(List<Pos> dots, string axis, int where)
+        public static List<Pos> FoldPage(string axis, int where, List<Pos> dots)
         {
-            return dots.Select(pos =>
-            {
-                if (axis == "x")
-                {
-                    if (pos.X > where)
-                        return new Pos(2 * where - pos.X, pos.Y);
-                    else
-                        return pos;
-                }
-                else
-                {
-                    if (pos.Y > where)
-                        return new Pos(pos.X, 2 * where - pos.Y);
-                    else
-                        return pos;
+            return dots.Select(dot => FoldAlong(axis, where, dot))
+                .Distinct()
+                .ToList();
+        }
 
-                }
-            })
-            .Distinct()
-            .ToList();
+        public static Pos FoldAlong(string axis, int where, Pos dot)
+        {
+            if (axis == "x")
+            {
+                if (dot.X > where)
+                    return new Pos(2 * where - dot.X, dot.Y);
+                else
+                    return dot;
+            }
+            else
+            {
+                if (dot.Y > where)
+                    return new Pos(dot.X, 2 * where - dot.Y);
+                else
+                    return dot;
+
+            }
         }
 
         public static string Render(List<Pos> dots)

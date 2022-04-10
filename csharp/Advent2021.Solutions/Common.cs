@@ -172,13 +172,13 @@ namespace Advent2021.Solutions
             UpHeap(Elems.Count - 1);
         }
 
-        public T Dequeue()
+        public (int, T) Dequeue()
         {
             Swap(0, Elems.Count - 1);
             var x = Elems.Last();
             Elems.RemoveAt(Elems.Count - 1);
             DownHeap(0);
-            return x.Item2;
+            return x;
         }
 
         public bool Any()

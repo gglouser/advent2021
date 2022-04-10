@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,81 +20,55 @@ namespace Advent2021.Solutions.Day15
             return new Result(part1, part2);
         }
 
-        public class State
-        {
-            public Pos Pos;
-            public List<Pos> Path;
-            public int Risk;
-
-            public State()
-            {
-                Pos = new Pos();
-                Path = new List<Pos>();
-                Risk = 0;
-            }
-
-            public State(Pos pos, List<Pos> path, int risk)
-            {
-                Pos = pos;
-                Path = path;
-                Risk = risk;
-            }
-
-            public bool CanGoTo(Pos next) => !Path.Contains(next);
-
-            public State MoveTo(Pos next, int risk)
-            {
-                var path = Path.ToList();
-                path.Add(Pos);
-                return new State(next, path, Risk + risk);
-            }
-        }
-
         public static int LowestRisk(Grid<int> cave)
         {
-            var queue = new PriorityQueue<State>();
-            queue.Enqueue(0, new State());
-            var goal = new Pos(cave.Width() - 1, cave.Height() - 1);
-            var visited = new HashSet<Pos>();
+            var bestRisks = Grid<int>.FromGenerator(cave.Width(), cave.Height(), _ => int.MaxValue);
+            var frontiers = new Dictionary<int, List<Pos>>();
+            var frontierQueue = new PriorityQueue<List<Pos>>();
+            var goalPos = new Pos(cave.Width() - 1, cave.Height() - 1);
 
-            while (queue.Any())
+            var initFrontier = new List<Pos>();
+            initFrontier.Add(new Pos());
+            frontierQueue.Enqueue(0, initFrontier);
+
+            while (frontierQueue.Any())
             {
-                var state = queue.Dequeue();
-                if (state.Pos.Equals(goal)) return state.Risk;
-                if (visited.Contains(state.Pos)) continue;
-                visited.Add(state.Pos);
-                foreach (var adj in cave.Adjacent(state.Pos))
+                var (frontierRisk, frontier) = frontierQueue.Dequeue();
+                foreach (var pos in frontier)
                 {
-                    if (!state.CanGoTo(adj)) continue;
-                    var next = state.MoveTo(adj, cave[adj]);
-                    var nextScore = next.Risk + cave.Width() - 1 - next.Pos.X
-                        + cave.Height() - 1 - next.Pos.Y;
-                    queue.Enqueue(nextScore, next);
+                    if (frontierRisk >= bestRisks[pos]) continue;
+
+                    bestRisks[pos] = frontierRisk;
+
+                    foreach (var adjacent in cave.Adjacent(pos))
+                    {
+                        int risk = frontierRisk + cave[adjacent];
+                        if (!frontiers.ContainsKey(risk))
+                        {
+                            frontiers.Add(risk, new List<Pos>());
+                            frontierQueue.Enqueue(risk, frontiers[risk]);
+                        }
+                        frontiers[risk].Add(adjacent);
+                    }
                 }
+
+                if (bestRisks[goalPos] < int.MaxValue) break;
             }
 
-            return -1;
+            return bestRisks[goalPos];
         }
 
         public static Grid<int> GrowMap(Grid<int> cave)
         {
-            int[][] bigCave = new int[5 * cave.Height()][];
-            for (int i = 0; i < bigCave.Length; i++)
-                bigCave[i] = new int[5 * cave.Width()];
-
-            for (int i = 0; i < bigCave.Length; i++)
+            return Grid<int>.FromGenerator(5 * cave.Width(), 5 * cave.Height(), pos =>
             {
-                int y = i % cave.Height();
-                int ywraps = i / cave.Height();
-                for (int j = 0; j < bigCave[0].Length; j++)
-                {
-                    int x = j % cave.Width();
-                    int xwraps = j / cave.Width();
-                    bigCave[i][j] = (cave[new Pos(x, y)] + xwraps + ywraps - 1) % 9 + 1;
-                }
-            }
-
-            return new Grid<int>(bigCave);
+                var blockX = pos.X / cave.Width();
+                var blockY = pos.Y / cave.Height();
+                var subX = pos.X % cave.Width();
+                var subY = pos.Y % cave.Height();
+                var risk = cave[new Pos(subX, subY)] + blockX + blockY;
+                return (risk - 1) % 9 + 1;
+            });
         }
     }
 }

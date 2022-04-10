@@ -30,7 +30,7 @@ namespace Advent2021.Solutions.Day23
 
             while (queue.Any())
             {
-                var state = queue.Dequeue();
+                var (_, state) = queue.Dequeue();
                 if (state.IsGoal())
                 {
                     // Console.WriteLine("found: " + state.Cost + " :: " + state.Token);
@@ -200,16 +200,15 @@ namespace Advent2021.Solutions.Day23
             var visited = new HashSet<int>();
             visited.Add(fromPos);
 
-            var queue = new PriorityQueue<(int, int)>();
+            var queue = new PriorityQueue<int>();
             foreach (var y in Links[fromPos])
             {
-                queue.Enqueue(y.Item2, (y.Item1, y.Item2));
+                queue.Enqueue(y.Item2, y.Item1);
             }
 
             while (queue.Any())
             {
-                var x = queue.Dequeue();
-                var pos = x.Item1;
+                var (cost, pos) = queue.Dequeue();
                 if (visited.Contains(pos)) continue;
                 visited.Add(pos);
                 if (Map[pos] != '.') continue;
@@ -218,7 +217,7 @@ namespace Advent2021.Solutions.Day23
                 if (inHallway && !startInHallway)
                 {
                     // Move into hallway.
-                    moves.Add(x);
+                    moves.Add((pos, cost));
                 }
                 else if (!inHallway)
                 {
@@ -236,15 +235,15 @@ namespace Advent2021.Solutions.Day23
                         }
                         if (ok)
                         {
-                            moves.Add(x);
+                            moves.Add((pos, cost));
                         }
                     }
                 }
 
                 foreach (var y in Links[pos])
                 {
-                    var c = x.Item2 + y.Item2;
-                    queue.Enqueue(c, (y.Item1, c));
+                    var c = cost + y.Item2;
+                    queue.Enqueue(c, y.Item1);
                 }
             }
 
